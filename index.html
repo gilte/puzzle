@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Endereço Bitcoin</title>
+    <noscript src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></noscript>
+    <noscript src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js"></noscript>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .output {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    
+    <h1>RIPEMD-160 Puzzle Solver</h1>
+    <p>Provide a partial range and see if it matches the target RIPEMD-160 hash.</p>
+    
+    <label for="rangeStart">Range Start:</label>
+    <input type="text" id="rangeStart" placeholder="Start key (64 hex chars)" value=""><br>
+    
+    <label for="rangeEnd">Range End:</label>
+    <input type="text" id="rangeEnd" placeholder="End key (64 hex chars)" value=""><br>
+    
+    <label for="targetHash">Target Hash:</label>
+    <input type="text" id="targetHash" placeholder="RIPEMD-160 hash (40 hex chars)"><br>
+    
+    <button id="startButton">Start Solving</button>
+    <div class="output" id="output"></div>
+
+    <script>
+        let worker;
+    
+        function randomizeKeyPart() {
+            // Limitar o randomPrefix a 13 caracteres hexadecimais
+            const randomPrefix = Math.floor(Math.random() * 0x10000000000000).toString(16).padStart(13, '0');
+            const fixedSuffix = "0000";
+    
+            // Atribuir os valores formatados aos campos
+            document.getElementById("rangeStart").value = randomPrefix + fixedSuffix;
+            document.getElementById("rangeEnd").value = randomPrefix + "ffff";
+    
+            console.log("Range Start:", document.getElementById("rangeStart").value);
+            console.log("Range End:", document.getElementById("rangeEnd").value);
+        }
+    
+        // Inicia a busca via worker
+        function startSolving() {
+            const targetHash = document.getElementById("targetHash").value;
+    
+            if (!targetHash || targetHash.length !== 40) {
+                document.getElementById("output").innerHTML = '<p class="error">Please provide a valid RIPEMD-160 hash (40 hex characters).</p>';
+                return;
+            }
+    
+            document.getElementById("output").textContent = "Processing...";
+    
+            worker = new Worker('worker.js');
+    
+            // Função para executar o worker
+            function runWorker() {
+                randomizeKeyPart();
+    
+                // Enviar dados para o Worker
+                worker.postMessage({
+                    rangeStart: document.getElementById("rangeStart").value,
+                    rangeEnd: document.getElementById("rangeEnd").value,
+                    targetHash: targetHash
+                });
+            }
+    
+            // Escutar mensagens do Worker
+            worker.onmessage = function(event) {
+                const message = event.data;
+                if (message.type === 'found') {
+                    document.getElementById("output").innerHTML = `<p>Found solution: ${message.privateKey}</p>`;
+                    worker.terminate();
+                } else if (message.type === 'update') {
+                    document.getElementById("output").innerHTML = `<p>${message.message}</p>`;
+                } else if (message.type === 'finished') {
+                    document.getElementById("output").innerHTML = '<p class="error">No solution found in the given range. Retrying...</p>';
+                    runWorker(); // Reiniciar o Worker para nova tentativa
+                }
+            };
+
+            
+    
+            runWorker(); // Primeira execução do Worker
+        }
+    
+        document.getElementById("startButton").addEventListener("click", startSolving);
+    </script>
+     
+</body>
+</html>
