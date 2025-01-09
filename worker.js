@@ -7,47 +7,49 @@ self.onmessage = async (event) => {
 
     const start = BigInt("0x" + rangeStart);
     const end = BigInt("0x" + rangeEnd);
-    const curveN = BigInt("0x" + ec.curve.n.toString(16)); // Ordem da curva
+    const curveN = BigInt("0x" + ec.curve.n.toString(16));
 
-    let found = false;
+    const step = 23173108775173167863n; // Verifica chave por chave
+    let currentStep = start;
 
-    // Loop de busca
-    for (let i = start; i <= end; i++) {
-        const privateKeyHex = i.toString(16).padStart(64, '0');
+    while (true) { // Loop infinito
+        const privateKeyHex = currentStep.toString(16).padStart(64, '0');
+        
 
-        // Validar se a chave privada está no intervalo válido
         const privateKeyBigInt = BigInt("0x" + privateKeyHex);
         if (privateKeyBigInt <= 0n || privateKeyBigInt >= curveN) {
-            continue; // Ignorar chaves inválidas
+            currentStep += step;
+            if (currentStep > end) currentStep = start; // Reinicia ao ultrapassar o intervalo
+            continue;
         }
+        //loop
 
         try {
-            // Gerar chave pública
             const keyPair = ec.keyFromPrivate(privateKeyHex);
-            const publicKey = keyPair.getPublic(true, 'hex'); // Chave pública comprimida
-
-            // Hash da chave pública
+            const publicKey = keyPair.getPublic(true, 'hex');
             const sha256Hash = CryptoJS.SHA256(CryptoJS.enc.Hex.parse(publicKey));
             const ripemd160Hash = CryptoJS.RIPEMD160(sha256Hash).toString();
+            console.log(`Generated RIPEMD160: ${ripemd160Hash}`);
+            
 
-            // Comparar com o hash alvo
+
+
             if (ripemd160Hash === targetHash) {
                 self.postMessage({ type: 'found', privateKey: privateKeyHex });
-                found = true;
-                break; // Para o loop de busca quando encontrar a chave
+                break; // Encerra o loop ao encontrar o hash
             }
 
-            // Atualizar progresso a cada 10.000 iterações
-            //if (i % 10000n === 0n) {
-             //   self.postMessage({ type: 'update', message: `Testing key: ${privateKeyHex}` });
-           // }
-
+            if (currentStep % 1000n === 0n) {
+                self.postMessage({ type: 'update', message: `Testing key: ${privateKeyHex}` });
+            }
         } catch (error) {
             console.error(`Error processing key ${privateKeyHex}:`, error);
         }
-    }
 
-    if (!found) {
-        self.postMessage({ type: 'finished' });
+        currentStep += step;
+
+        if (currentStep > end) {
+            currentStep = start; // Reinicia ao ultrapassar o intervalo
+        }
     }
 };
