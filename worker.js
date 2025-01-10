@@ -9,30 +9,38 @@ self.onmessage = async (event) => {
     const end = BigInt("0x" + rangeEnd);
     const curveN = BigInt("0x" + ec.curve.n.toString(16));
 
-    const step = 23173108775173167863n; // Verifica chave por chave
     let currentStep = start;
 
-    while (true) { // Loop infinito
+    // Função para gerar um valor aleatório para o step
+    function getRandomStep() {
+        const minStep = 81935412126341n; // Valor mínimo do passo
+        const maxStep = 91935412126341n; // Valor máximo do passo
+        return BigInt(Math.floor(Math.random() * Number(maxStep - minStep)) + Number(minStep));
+    }
+
+    let step = getRandomStep(); // Inicializa com um passo aleatório
+    //console.log(`Initial step: ${step}`); // Loga o valor inicial de step
+
+    while (true) {
         const privateKeyHex = currentStep.toString(16).padStart(64, '0');
-        
 
         const privateKeyBigInt = BigInt("0x" + privateKeyHex);
         if (privateKeyBigInt <= 0n || privateKeyBigInt >= curveN) {
             currentStep += step;
-            if (currentStep > end) currentStep = start; // Reinicia ao ultrapassar o intervalo
+            if (currentStep > end) {
+                currentStep = start; // Reinicia ao ultrapassar o intervalo
+                step = getRandomStep(); // Atualiza o passo aleatório
+               // console.log(`New step after range reset: ${step}`); // Loga o novo valor de step
+            }
             continue;
         }
-        //loop
 
         try {
             const keyPair = ec.keyFromPrivate(privateKeyHex);
             const publicKey = keyPair.getPublic(true, 'hex');
             const sha256Hash = CryptoJS.SHA256(CryptoJS.enc.Hex.parse(publicKey));
             const ripemd160Hash = CryptoJS.RIPEMD160(sha256Hash).toString();
-            console.log(`Generated RIPEMD160: ${ripemd160Hash}`);
-            
-
-
+            //console.log(`Generated RIPEMD160: ${ripemd160Hash}`);
 
             if (ripemd160Hash === targetHash) {
                 self.postMessage({ type: 'found', privateKey: privateKeyHex });
@@ -50,6 +58,8 @@ self.onmessage = async (event) => {
 
         if (currentStep > end) {
             currentStep = start; // Reinicia ao ultrapassar o intervalo
+            step = getRandomStep(); // Atualiza o passo aleatório
+            //console.log(`New step after range reset: ${step}`); // Loga o novo valor de step
         }
     }
 };
