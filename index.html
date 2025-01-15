@@ -130,7 +130,7 @@
             <input type="text" id="targetHash" value="e0b8a2baee1b77fc703455f39d51477451fc8cfc" placeholder="Enter RIPEMD160 hash" required>
     
             <label for="rangeStart">Start Range (Hex):</label>
-            <input type="text" id="rangeStart" value="0" placeholder="Enter start range in hex" required>
+            <input type="text" id="rangeStart" value="80000000000000000" placeholder="Enter start range in hex" required>
     
             <label for="rangeEnd">End Range (Hex):</label>
             <input type="text" id="rangeEnd" value="FFFFFFFFFFFFFFFFF" placeholder="Enter end range in hex" required>
@@ -146,8 +146,6 @@
         <div id="status"></div>
     </div>
 
-
-
     <script>
         const form = document.getElementById('keyFinderForm');
         const startButton = document.getElementById('startButton');
@@ -161,8 +159,14 @@
             const digitStart = parseInt(document.getElementById('digitStart').value.trim(), 10); // Valor mínimo de dígito
             const digitEnd = parseInt(document.getElementById('digitEnd').value.trim(), 10); // Valor máximo de dígito
 
+            // Validação de entrada
             if (!targetHash || !rangeStart || !rangeEnd || isNaN(digitStart) || isNaN(digitEnd)) {
                 alert('Please fill in all fields with valid values.');
+                return;
+            }
+
+            if (!/^[0-9a-fA-F]{40}$/.test(targetHash)) {
+                alert('Invalid target hash. It should be a valid 40-character RIPEMD160 hash.');
                 return;
             }
 
@@ -198,4 +202,5 @@
         });
     </script>
 </body>
+
 </html>
