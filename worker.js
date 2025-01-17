@@ -1,6 +1,6 @@
 const { parentPort } = require('worker_threads');
-const CryptoJS = require('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js');
-const elliptic = require('https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.6.1/elliptic.min.js');
+const CryptoJS = require('./lib/crypto-js.min.js');
+const elliptic = require('./lib/elliptic.min.js');
 
 parentPort.on('message', async (data) => {
     const { rangeStart, rangeEnd, targetHash, minStep, maxStep, validationThreshold } = data;
