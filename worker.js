@@ -1,5 +1,5 @@
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js');
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.6.1/elliptic.min.js');
+//importScripts('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js');
+//importScripts('https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.6.1/elliptic.min.js');
 
 self.onmessage = async (event) => {
     const { rangeStart, rangeEnd, targetHash } = event.data;
