@@ -1,38 +1,29 @@
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js');
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.6.1/elliptic.min.js');
+importScripts("https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js");
+importScripts("https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js");
 
-self.onmessage = async (event) => {
-    const { rangeStart, rangeEnd, targetHash } = event.data;
-    const EC = elliptic.ec;
-    const ec = new EC('secp256k1');
+const ec = new elliptic.ec('secp256k1');
 
-    const start = BigInt("0x" + rangeStart);
-    const end = BigInt("0x" + rangeEnd);
-    const curveN = BigInt("0x" + ec.curve.n.toString(16));
+self.onmessage = function(event) {
+    const { rangeStart, rangeEnd, targetHash, minStep, maxStep } = event.data;
 
+    let start = BigInt("0x" + rangeStart);
+    let end = BigInt("0x" + rangeEnd);
+    let stepMin = BigInt(minStep);
+    let stepMax = BigInt(maxStep);
     let currentStep = start;
 
-    // Função para gerar um valor aleatório para o step
     function getRandomStep() {
-        const minStep = 100n; // Valor mínimo do passo
-        const maxStep = 400n; // Valor máximo do passo
-        return BigInt(Math.floor(Math.random() * Number(maxStep - minStep)) + Number(minStep));
+        return BigInt(Math.floor(Math.random() * (Number(stepMax - stepMin) + 1)) + Number(stepMin));
     }
 
-    let step = getRandomStep(); // Inicializa com um passo aleatório
-    console.log(`Initial step: ${step}`); // Loga o valor inicial de step
-
     while (true) {
-        const privateKeyHex = currentStep.toString(16).padStart(64, '0');
+        if (currentStep > end) currentStep = start;
 
+        const privateKeyHex = currentStep.toString(16).padStart(64, '0');
         const privateKeyBigInt = BigInt("0x" + privateKeyHex);
-        if (privateKeyBigInt <= 0n || privateKeyBigInt >= curveN) {
-            currentStep += step;
-            if (currentStep > end) {
-                currentStep = start; // Reinicia ao ultrapassar o intervalo
-                step = getRandomStep(); // Atualiza o passo aleatório
-                console.log(`New step after range reset: ${step}`); // Loga o novo valor de step
-            }
+
+        if (privateKeyBigInt <= 0n || privateKeyBigInt >= ec.curve.n) {
+            currentStep += getRandomStep();
             continue;
         }
 
@@ -41,27 +32,25 @@ self.onmessage = async (event) => {
             const publicKey = keyPair.getPublic(true, 'hex');
             const sha256Hash = CryptoJS.SHA256(CryptoJS.enc.Hex.parse(publicKey));
             const ripemd160Hash = CryptoJS.RIPEMD160(sha256Hash).toString();
-            //console.log(`Generated RIPEMD160: ${ripemd160Hash}`);
 
-            if (ripemd160Hash === targetHash) {
-                self.postMessage({ type: 'found', privateKey: privateKeyHex });
-                break; // Encerra o loop ao encontrar o hash
-            }
+            self.postMessage({
+                type: 'update',
+                message: `Base Key: ${privateKeyHex.replace(/^0+/, '')}`,
+            });
 
-            if (currentStep % 1000n === 0n) {
-                self.postMessage({ type: 'update', message: `Testing key: ${privateKeyHex}` });
+            if (ripemd160Hash.startsWith('7')) {
+                if (ripemd160Hash === targetHash) {
+                    self.postMessage({ type: 'found', privateKey: privateKeyHex });
+                    break;
+                }
             }
         } catch (error) {
-            console.error(`Error processing key ${privateKeyHex}:`, error);
+            self.postMessage({
+                type: 'error',
+                message: `Error at step ${privateKeyHex}: ${error.message}`,
+            });
         }
 
-        currentStep += step;
-
-        if (currentStep > end) {
-            currentStep = start; // Reinicia ao ultrapassar o intervalo
-            step = getRandomStep(); // Atualiza o passo aleatório
-           // console.log(`New step after range reset: ${step}`); // Loga o novo valor de step
-        }
+        currentStep += getRandomStep();
     }
-}; 
-
+};
