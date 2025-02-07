@@ -14,8 +14,8 @@ self.onmessage = async (event) => {
 
     // Função para gerar um valor aleatório para o step
     function getRandomStep() {
-        const minStep = 10000000000000n; // Valor mínimo do passo
-        const maxStep = 40000000000000n; // Valor máximo do passo
+        const minStep = 100n; // Valor mínimo do passo
+        const maxStep = 400n; // Valor máximo do passo
         return BigInt(Math.floor(Math.random() * Number(maxStep - minStep)) + Number(minStep));
     }
 
