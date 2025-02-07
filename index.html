@@ -3,204 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RIPEMD160 Private Key Finder</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Bitcoin Key Search</title>
     <style>
-        /* Estilo geral */
-        body {
-            font-family: 'Poppins', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; background: #f4f7fa; color: #333; padding: 20px; }
+        h1 { text-align: center; color: #4b8d7b; margin-bottom: 30px; }
+        #searchForm {
+            background: #fff; padding: 20px; border-radius: 10px; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px; margin: 0 auto; display: block;
         }
-    
-        /* Contêiner principal */
-        .container {
-            background-color: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 400px;
-            animation: fadeIn 1s ease-out;
+        label { font-size: 1.1rem; color: #555; margin-bottom: 10px; display: inline-block; }
+        input[type="text"] {
+            width: 100%; padding: 10px; margin-bottom: 15px;
+            border: 1px solid #ccc; border-radius: 5px;
+            font-size: 1rem; color: #333; transition: all 0.3s ease;
         }
-    
-        /* Animação de entrada */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-    
-        /* Labels e campos de entrada */
-        label {
-            display: block;
-            margin: 10px 0 5px;
-            font-weight: bold;
-            color: #e0e0e0;
-        }
-    
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            color: #fff;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-    
-        input:focus {
-            outline: none;
-            border-color: #00d1ff;
-            box-shadow: 0 0 8px rgba(0, 209, 255, 0.6);
-        }
-    
-        /* Botões */
+        input[type="text"]:focus { border-color: #4b8d7b; outline: none; }
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background-color 0.3s, transform 0.2s;
+            width: 48%; padding: 10px; font-size: 1.1rem; color: #fff;
+            background-color: #4b8d7b; border: none; border-radius: 5px;
+            cursor: pointer; transition: background-color 0.3s ease;
         }
-    
-        button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-        }
-    
-        button:active {
-            transform: translateY(0);
-        }
-    
-        /* Status */
-        #status {
-            margin-top: 20px;
-            font-weight: bold;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #fff;
-            color: #f0f0f0;
-            transition: all 0.3s ease;
-        }
-    
-        #status span {
-            font-weight: bold;
-        }
-    
-        /* Responsividade */
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px;
-            }
-    
-            button {
-                font-size: 14px;
-            }
+        button:disabled { background-color: #ccc; }
+        button:hover { background-color: #398c68; }
+        #status { margin-top: 20px; font-size: 1.2rem; color: #ff6347; text-align: center; }
+        @media (max-width: 600px) {
+            h1 { font-size: 1.5rem; }
+            #searchForm { padding: 15px; max-width: 100%; }
+            button { width: 100%; margin-bottom: 10px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>RIPEMD160 Private Key Finder</h1>
-        <form id="keyFinderForm">
-            <label for="targetHash">Target RIPEMD160 Hash:</label>
-            <input type="text" id="targetHash" value="e0b8a2baee1b77fc703455f39d51477451fc8cfc" placeholder="Enter RIPEMD160 hash" required>
-    
-            <label for="rangeStart">Start Range (Hex):</label>
-            <input type="text" id="rangeStart" value="80000000000000000" placeholder="Enter start range in hex" required>
-    
-            <label for="rangeEnd">End Range (Hex):</label>
-            <input type="text" id="rangeEnd" value="FFFFFFFFFFFFFFFFF" placeholder="Enter end range in hex" required>
-    
-            <label for="digitStart">Start Digit (Min):</label>
-            <input type="number" id="digitStart" min="0" max="9" value="0" required>
-    
-            <label for="digitEnd">End Digit (Max):</label>
-            <input type="number" id="digitEnd" min="0" max="9" value="9" required>
-    
-            <button type="button" id="startButton">Start Search</button>
-        </form>
-        <div id="status"></div>
-    </div>
 
-    <script>
-        const form = document.getElementById('keyFinderForm');
-        const startButton = document.getElementById('startButton');
-        const statusDiv = document.getElementById('status');
-        let worker;
+<h1>Bitcoin Private Key Search</h1>
 
-        startButton.addEventListener('click', () => {
-            const targetHash = document.getElementById('targetHash').value.trim();
-            const rangeStart = document.getElementById('rangeStart').value.trim();
-            const rangeEnd = document.getElementById('rangeEnd').value.trim();
-            const digitStart = parseInt(document.getElementById('digitStart').value.trim(), 10); // Valor mínimo de dígito
-            const digitEnd = parseInt(document.getElementById('digitEnd').value.trim(), 10); // Valor máximo de dígito
+<form id="searchForm">
+    <label for="rangeStart">Start Range:</label>
+    <input type="text" id="rangeStart" value="40000000000000000" required><br>
+    <label for="rangeEnd">End Range:</label>
+    <input type="text" id="rangeEnd" value="7FFFFFFFFFFFFFFFF" required><br>
+    <label for="targetHash">Target Hash:</label>
+    <input type="text" id="targetHash" value="739437bb3dd6d1983e66629c5f08c70e52769371" required><br>
+    <label for="minStep">Min Step:</label>
+    <input type="text" id="minStep" value="10000000000000000" required><br>
+    <label for="maxStep">Max Step:</label>
+    <input type="text" id="maxStep" value="100000000000000000" required><br>
+    <button type="submit" id="startButton">Start Search</button>
+    <button type="button" id="stopButton" disabled>Stop Search</button>
+</form>
 
-            // Validação de entrada
-            if (!targetHash || !rangeStart || !rangeEnd || isNaN(digitStart) || isNaN(digitEnd)) {
-                alert('Please fill in all fields with valid values.');
-                return;
+<div id="status"></div>
+
+<script>
+    let worker;
+
+    document.getElementById('searchForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (worker) worker.terminate();
+
+        const rangeStart = document.getElementById('rangeStart').value.trim();
+        const rangeEnd = document.getElementById('rangeEnd').value.trim();
+        const targetHash = document.getElementById('targetHash').value.trim();
+        const minStep = document.getElementById('minStep').value.trim();
+        const maxStep = document.getElementById('maxStep').value.trim();
+
+        worker = new Worker('worker.js');
+        worker.postMessage({ rangeStart, rangeEnd, targetHash, minStep, maxStep });
+
+        document.getElementById('startButton').disabled = true;
+        document.getElementById('stopButton').disabled = false;
+        document.getElementById('status').textContent = 'Searching...';
+
+        worker.onmessage = function (event) {
+            if (event.data.type === 'found') {
+                alert(`Private key found: ${event.data.privateKey}`);
+                stopWorker();
+            } else if (event.data.type === 'stopped') {
+                document.getElementById('status').textContent = 'Search stopped.';
+                stopWorker();
             }
+        };
+    });
 
-            if (!/^[0-9a-fA-F]{40}$/.test(targetHash)) {
-                alert('Invalid target hash. It should be a valid 40-character RIPEMD160 hash.');
-                return;
-            }
+    document.getElementById('stopButton').addEventListener('click', function () {
+        if (worker) {
+            worker.terminate();
+            stopWorker();
+        }
+    });
 
-            // Terminate any existing worker
-            if (worker) {
-                worker.terminate();
-            }
+    function stopWorker() {
+        document.getElementById('startButton').disabled = false;
+        document.getElementById('stopButton').disabled = true;
+    }
+</script>
 
-            // Initialize a new worker
-            worker = new Worker('worker.js');
-
-            worker.onmessage = (event) => {
-                const { type, message, privateKey } = event.data;
-
-                if (type === 'update') {
-                    statusDiv.textContent = message;
-                } else if (type === 'found') {
-                    statusDiv.innerHTML = `<span style="color: green;">Private Key Found:</span> ${privateKey}`;
-                    worker.terminate();
-                } else if (type === 'finished') {
-                    statusDiv.innerHTML = `<span style="color: red;">Search completed. No match found.</span>`;
-                }
-            };
-
-            worker.onerror = (error) => {
-                statusDiv.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
-                worker.terminate();
-            };
-
-            // Post the data to the worker, including digit range
-            worker.postMessage({ rangeStart, rangeEnd, targetHash, digitStart, digitEnd });
-            statusDiv.textContent = 'Starting search...';
-        });
-    </script>
 </body>
-
 </html>
